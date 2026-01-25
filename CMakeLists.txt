@@ -1,0 +1,116 @@
+cmake_minimum_required(VERSION 3.20)
+project(microbit_dsp_spectrum_analyzer LANGUAGES C CXX ASM)
+
+# ----------------------------
+# Options / Target names
+# ----------------------------
+set(TARGET_NAME dsp-analyzer CACHE STRING "Firmware target name (base name, without extension)")
+set(ELF_TARGET "${TARGET_NAME}.elf")
+
+option(BUILD_FIRMWARE "Build embedded firmware (ARM cross-compile)" ${CMAKE_CROSSCOMPILING})
+option(BUILD_TESTS    "Build host unit tests" ON)
+
+set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
+
+# ----------------------------
+# Common flags (ARM / Cortex-M4F)
+# ----------------------------
+set(MB2_CPU_FLAGS
+        -mcpu=cortex-m4
+        -mthumb
+        -mfpu=fpv4-sp-d16
+        -mfloat-abi=hard
+)
+
+function(mb2_apply_firmware_flags tgt)
+    target_compile_options(${tgt} PRIVATE
+            ${MB2_CPU_FLAGS}
+            -ffreestanding
+            -fdata-sections -ffunction-sections
+            -Wall -Wextra
+            $<$<CONFIG:Debug>:-Og -g3>
+            $<$<CONFIG:Release>:-O2>
+    )
+
+    target_compile_options(${tgt} PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions -fno-rtti>
+    )
+
+    target_compile_definitions(${tgt} PRIVATE
+            $<$<CONFIG:Release>:NDEBUG>
+            NRF52833_XXAA
+    )
+
+    target_link_options(${tgt} PRIVATE
+            ${MB2_CPU_FLAGS}
+            -nostdlib
+            -Wl,--gc-sections
+            -Wl,-Map=${CMAKE_BINARY_DIR}/${TARGET_NAME}.map
+            -T ${SRC_DIR}/platform/linker.ld
+            $<$<CONFIG:Release>:-Wl,--strip-debug>
+    )
+endfunction()
+
+# =====================================================================
+# Firmware (ARM)
+# =====================================================================
+if(BUILD_FIRMWARE)
+    add_executable(${ELF_TARGET}
+            ${SRC_DIR}/platform/startup.s
+            ${SRC_DIR}/platform/handlers.c
+            ${SRC_DIR}/platform/mem.c
+
+            # minimal app (hello-world / startup)
+            ${SRC_DIR}/app/main.cpp
+
+            # FreeRTOS minimum set (add more later as needed)
+            ${SRC_DIR}/rtos/hooks.c
+            ${SRC_DIR}/rtos/heap_4.c
+            third_party/freertos-kernel/list.c
+            third_party/freertos-kernel/queue.c
+            third_party/freertos-kernel/tasks.c
+            third_party/freertos-kernel/portable/GCC/ARM_CM4F/port.c
+    )
+
+    target_include_directories(${ELF_TARGET} PRIVATE
+            ${SRC_DIR}/include
+            ${SRC_DIR}/platform/include
+            ${SRC_DIR}/rtos/include
+            ${SRC_DIR}/app/include
+
+            third_party/freertos-kernel/include
+            third_party/freertos-kernel/portable/GCC/ARM_CM4F
+
+            # Keep only if your startup/headers rely on them
+            third_party/freertos-kernel/portable/GCC/ARM_CM4F
+            third_party/CMSIS_5/CMSIS/Core/Include
+            third_party/hal_nordic/nrfx/mdk
+    )
+
+    mb2_apply_firmware_flags(${ELF_TARGET})
+endif()
+
+# =====================================================================
+# Unit tests (Host) - minimal
+# =====================================================================
+if(BUILD_TESTS AND NOT CMAKE_CROSSCOMPILING)
+    include(CTest)
+    enable_testing()
+
+    add_library(unity STATIC
+            third_party/unity/src/unity.c
+    )
+    target_include_directories(unity PUBLIC
+            third_party/unity/src
+    )
+
+    # one basic test executable
+    add_executable(unit_tests
+            tests/test_main.c
+    )
+    target_link_libraries(unit_tests PRIVATE unity)
+    target_compile_definitions(unit_tests PRIVATE UNIT_TESTING=1)
+    target_compile_options(unit_tests PRIVATE -g -O0)
+
+    add_test(NAME unit_tests COMMAND unit_tests)
+endif()

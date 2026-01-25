@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# If clang-format isn't available, don't block commits locally.
+if ! command -v clang-format >/dev/null 2>&1; then
+  echo "WARNING: clang-format not found; skipping format (CI will enforce)."
+  exit 0
+fi
+
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|cc|cpp|cxx|h|hpp)$' || true)
+[ -z "$FILES" ] && exit 0
+
+echo "$FILES" | xargs -n 50 clang-format -i
+echo "$FILES" | xargs -n 50 git add

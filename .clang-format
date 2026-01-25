@@ -1,0 +1,18 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 100
+
+# 1. Braces: Always attached to the statement (no line break)
+BreakBeforeBraces: Attach
+
+# 2. Constructor Initializer Lists: Modern Recommended Rules
+# This forces the colon (:) to start on a new line if the list is long,
+# and keeps the initializers neatly aligned.
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: NextLine
+ConstructorInitializerIndentWidth: 4
+
+# 3. Additional Recommended Modern Tweaks
+PointerAlignment: Left          # int* p instead of int *p
+SortIncludes: true               # Keeps headers alphabetized
+FixNamespaceComments: true       # Adds // namespace name at the end of blocks
