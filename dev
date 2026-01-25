@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Always run from repo root, even if invoked elsewhere
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+
+BUILD_DIR="${BUILD_DIR:-build}"
+SCRIPTS_DIR="${SCRIPTS_DIR:-$ROOT/scripts}"
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+run_script() {
+  local script="$1"
+  shift || true
+
+  [[ -f "$SCRIPTS_DIR/$script" ]] || die "Missing script: $SCRIPTS_DIR/$script"
+  [[ -x "$SCRIPTS_DIR/$script" ]] || die "Not executable: $SCRIPTS_DIR/$script (run: chmod +x \"$SCRIPTS_DIR/$script\")"
+
+  "$SCRIPTS_DIR/$script" "$@"
+}
+
+usage() {
+  cat <<EOF
+Usage: ./dev <command> [args]
+
+CMake / build:
+  configure            Configure CMake in \$BUILD_DIR (default: build)
+  build                Build target 'deploy' (same as deploy)
+  deploy               Build target 'deploy'
+  clean                Build target 'clean'
+  purge                Remove build directories and start over with configure
+  debugserver           Build target 'debugserver'
+
+Repo scripts (from ./scripts):
+  setup                Run: scripts/dev-setup.sh
+  test                 Run: scripts/dev-test.sh
+  format               Run: scripts/dev-format.sh
+  format-check          Run: scripts/ci-check-format.sh
+
+Environment:
+  BUILD_DIR=build-debug ./dev deploy
+
+EOF
+}
+
+cmd="${1:-}"
+shift || true
+
+case "$cmd" in
+  help|-h|--help|"")
+    usage
+    ;;
+
+  # Repo scripts
+  setup)
+    run_script "dev-setup.sh" "$@"
+    ;;
+  test)
+    run_script "dev-test.sh" "$@"
+    ;;
+  format)
+    run_script "dev-format.sh" "$@"
+    ;;
+  format-check|check-format|ci-format-check)
+    run_script "ci-check-format.sh" "$@"
+    ;;
+
+  # CMake targets
+  configure|cmake)
+    cmake -S . -B "$BUILD_DIR" -G Ninja \
+      -DCMAKE_TOOLCHAIN_FILE="$ROOT/arm-gcc-toolchain.cmake" \
+      -DTARGET_NAME=dsp-analyzer
+    ;;
+  build|deploy)
+    cmake --build "$BUILD_DIR"
+    ;;
+  purge)
+    rm -rf build build-host  # Remove CMake cache as well
+    ./dev configure
+    ;;
+  clean)
+    cmake --build "$BUILD_DIR" --target clean
+    ;;
+  debugserver)
+    cmake --build "$BUILD_DIR" --target debugserver
+    ;;
+
+  *)
+    echo "Unknown command: $cmd"
+    echo
+    usage
+    exit 1
+    ;;
+esac

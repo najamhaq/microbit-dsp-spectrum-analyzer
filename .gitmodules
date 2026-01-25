@@ -1,0 +1,12 @@
+[submodule "third_party/freertos-kernel"]
+	path = third_party/freertos-kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "third_party/unity"]
+	path = third_party/unity
+	url = https://github.com/ThrowTheSwitch/Unity.git
+[submodule "third_party/nrfx"]
+	path = third_party/nrfx
+	url = https://github.com/NordicSemiconductor/nrfx.git
+[submodule "third_party/cmsis_5"]
+	path = third_party/cmsis_5
+	url = https://github.com/ARM-software/CMSIS_5.git
