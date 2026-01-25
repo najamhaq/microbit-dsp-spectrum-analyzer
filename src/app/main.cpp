@@ -1,6 +1,6 @@
 extern "C" {
 #include "FreeRTOS.h"
-#include "microbit_ver_2.h"
+//#include "microbit_ver_2.h"
 #include "task.h"
 }
 
