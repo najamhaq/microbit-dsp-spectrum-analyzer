@@ -70,7 +70,7 @@ case "$cmd" in
   configure|cmake)
     cmake -S . -B "$BUILD_DIR" -G Ninja \
       -DCMAKE_TOOLCHAIN_FILE="$ROOT/arm-gcc-toolchain.cmake" \
-      -DTARGET_NAME=firmware
+      -DTARGET_NAME=dsp-analyzer
     ;;
   build|deploy)
     cmake --build "$BUILD_DIR"
