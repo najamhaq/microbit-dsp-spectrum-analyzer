@@ -70,10 +70,14 @@ case "$cmd" in
   configure|cmake)
     cmake -S . -B "$BUILD_DIR" -G Ninja \
       -DCMAKE_TOOLCHAIN_FILE="$ROOT/arm-gcc-toolchain.cmake" \
-      -DTARGET_NAME=dsp-analyzer
+      -DTARGET_NAME=dsp-analyzer    \
+      -DCMAKE_BUILD_TYPE=Debug
     ;;
-  build|deploy)
+  build)
     cmake --build "$BUILD_DIR"
+    ;;
+  deploy)
+    cmake --build "$BUILD_DIR" --target deploy
     ;;
   purge)
     rm -rf build build-host  # Remove CMake cache as well

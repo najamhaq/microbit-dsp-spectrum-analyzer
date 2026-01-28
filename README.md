@@ -32,6 +32,26 @@ Tasks (FreeRTOS):
 
 Communication uses FreeRTOS queues and/or task notifications.
 
+## LED Matrix Refresh
+
+The 5×5 LED matrix is refreshed using **row–column multiplexing** driven by a
+dedicated **hardware timer (nRF TIMER4)**.
+
+- TIMER4 generates a **1 kHz interrupt**
+- Each interrupt scans **one row**
+- A full frame is refreshed every ~5 ms
+- Refresh timing is **independent of FreeRTOS scheduling**
+
+
+Display refresh is handled entirely inside `LedMatrix`:
+- RTOS tasks only update the frame buffer (`setPixel()`, `setFrame()`)
+- No timing-critical logic runs in FreeRTOS tasks
+
+This design avoids RTOS jitter, ensures flicker-free output under load, and
+leaves other hardware timers available for audio sampling and DSP timing.
+However, there is an optional ScreenRefresh  task that can be used via regular threading if desired.
+
+
 ## Dependencies
 
 This repo uses git submodules for third-party dependencies:

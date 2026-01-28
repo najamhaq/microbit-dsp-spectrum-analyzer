@@ -70,6 +70,16 @@ if(BUILD_FIRMWARE)
             third_party/freertos-kernel/queue.c
             third_party/freertos-kernel/tasks.c
             third_party/freertos-kernel/portable/GCC/ARM_CM4F/port.c
+            src/app/include/app_task.h
+            src/app/include/audio_task.h
+            src/app/audio_task.cpp
+            src/drivers/include/audio_capture.h
+            src/drivers/audio_capture.cpp
+            src/drivers/include/led_matrix.h
+            src/drivers/led_matrix.cpp
+            src/app/screen_refresh.cpp
+            src/app/include/screen_refresh.h
+            src/drivers/led_matrix.cpp
     )
 
     target_include_directories(${ELF_TARGET} PRIVATE
@@ -77,17 +87,46 @@ if(BUILD_FIRMWARE)
             ${SRC_DIR}/platform/include
             ${SRC_DIR}/rtos/include
             ${SRC_DIR}/app/include
+            ${SRC_DIR}/drivers/include
 
             third_party/freertos-kernel/include
             third_party/freertos-kernel/portable/GCC/ARM_CM4F
 
             # Keep only if your startup/headers rely on them
             third_party/freertos-kernel/portable/GCC/ARM_CM4F
-            third_party/CMSIS_5/CMSIS/Core/Include
+            third_party/cmsis_core/Include
             third_party/hal_nordic/nrfx/mdk
+            third_party/nrfx/bsp/stable/mdk
+            third_party/nrfx
+            third_party/nrfx/mdk
     )
 
     mb2_apply_firmware_flags(${ELF_TARGET})
+
+    # ----------------------------
+    # Deploy (pyOCD)
+    # ----------------------------
+    # Use the Windows Python launcher so deploy/debug works from PowerShell, Git Bash, MSYS2, CLion
+    find_program(PY_LAUNCHER py REQUIRED)
+    add_custom_target(deploy
+            COMMAND ${PY_LAUNCHER} -m pyocd flash --target nrf52833 --erase sector $<TARGET_FILE:${ELF_TARGET}>
+            COMMAND ${PY_LAUNCHER} -m pyocd reset --target nrf52833
+            DEPENDS ${ELF_TARGET}
+            USES_TERMINAL
+            VERBATIM
+    )
+
+    # ----------------------------
+    # Debug server (pyOCD gdbserver)
+    # ----------------------------
+    set(PYOCD_FREQ 200000 CACHE STRING "pyOCD SWD frequency in Hz")
+
+    add_custom_target(debugserver
+            COMMAND ${PY_LAUNCHER} -m pyocd gdbserver --target nrf52833 --frequency ${PYOCD_FREQ} --port 3333
+            USES_TERMINAL
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
 endif()
 
 # =====================================================================

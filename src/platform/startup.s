@@ -30,8 +30,18 @@ g_pfnVectors:
   .word xPortPendSVHandler + 1
   .word xPortSysTickHandler + 1
 
-  /* IRQs */
-  .rept 48
+  /* IRQs (48 external IRQs on nRF52833) */
+
+  /* IRQ 0 .. IRQ 26 */
+  .rept 27
+    .word Default_Handler + 1
+  .endr
+
+  /* IRQ 27 = TIMER4_IRQn */
+  .word TIMER4_IRQHandler + 1
+
+  /* IRQ 28 .. IRQ 47 */
+  .rept (48 - 27 - 1)
     .word Default_Handler + 1
   .endr
 
