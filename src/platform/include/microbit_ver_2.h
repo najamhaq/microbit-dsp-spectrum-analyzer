@@ -13,8 +13,14 @@
 
 #define NRF_PIN(port, pin) (((port) << 5) | (pin))
 
+///  UART related
 #define MB2_UART_TX_PIN NRF_PIN(0, 6) // P0.06
 #define MB2_UART_RX_PIN NRF_PIN(1, 8) // P1.08
+
+//  Audio Related input (microphone)
+#define MB2_MIC_IN_PIN NRF_PIN(0, 5)   // P0.05  (ADC AIN3)
+#define MB2_RUN_MIC_PIN NRF_PIN(0, 20) // P0.20  (mic power enable)
+#define MB2_MIC_SAADC_AIN 3
 
 static inline uint32_t BIT(uint32_t pin) { return (1u << (pin)); }
 

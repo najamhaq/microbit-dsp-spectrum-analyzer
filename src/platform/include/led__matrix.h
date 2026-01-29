@@ -43,15 +43,6 @@ public:
     }
   }
 
-  static void led_on(uint32_t row, uint32_t col) {
-    set_low(col_pins[col]);  // Turn it ON
-    set_high(row_pins[row]); // Turn it ON
-  }
-  static void led_off(uint32_t row, uint32_t col) {
-    set_high(col_pins[col]); // Turn it OFF
-    set_low(row_pins[row]);  // Turn it OFF
-  }
-
 private:
   static void set_high(gpio_t gpio) {
     if (gpio.port == 0) {
