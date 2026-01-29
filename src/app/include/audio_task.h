@@ -6,12 +6,17 @@
 #define DSP_SPECTRUM_ANALYZER_SRC_APP_INCLUDE_AUDIO_TASK_H
 
 #include "app_task.h"
+#include "screen_refresh.h"
 class AudioTask : public AppTask {
 public:
   void init() override;
   void run() override;
   void resume() override;
   void stop() override;
+  void setScreenRefresh(ScreenRefresh* p_screen_refresh);
+
+private:
+  ScreenRefresh* p_screen_refresh_;
 };
 ;
 #endif // DSP_SPECTRUM_ANALYZER_SRC_APP_INCLUDE_AUDIO_TASK_H

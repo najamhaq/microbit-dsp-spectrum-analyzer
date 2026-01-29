@@ -16,6 +16,7 @@ public:
   void run() override;
   void resume() override;
   void stop() override;
+  void setFrame(uint32_t frame);
 
 private:
   LedMatrix _ledMatrix;
